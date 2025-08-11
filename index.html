@@ -1568,5 +1568,108 @@ const DUPLICATE_CHANCE = 0.22;
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') overlay.classList.remove('open'); });
 })();
-</script></body>
+</script>
+<script>
+(function(){
+  const lb = document.getElementById('lightbox');
+  if (!lb) return;
+  const imgEl = document.getElementById('lightbox-img');
+  const capEl = document.getElementById('lightbox-caption');
+  const closeBtn = document.getElementById('lightbox-close');
+
+  function show(src, caption){
+    imgEl.src = src;
+    capEl.textContent = caption || '';
+    lb.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function hide(){
+    lb.classList.add('hidden');
+    imgEl.src = '';
+    document.body.style.overflow = '';
+  }
+
+  // Delegate clicks for any relevant tiles/images
+  document.addEventListener('click', function(e){
+    // weapon tiles (T1/T2), winners, and generic image tiles
+    const img = e.target.closest('.weapon img, .csgo-win-card img, .win-card img, .drug-card img');
+    if (img) {
+      const caption = img.getAttribute('alt') 
+        || (img.closest('.weapon') && img.closest('.weapon').querySelector('.name-badge')?.textContent)
+        || (img.closest('.csgo-win-card') && img.closest('.csgo-win-card').querySelector('.name')?.textContent)
+        || (img.closest('.win-card') && img.closest('.win-card').querySelector('.name')?.textContent)
+        || (img.closest('.drug-card') && img.closest('.drug-card').querySelector('.drug-meta .name')?.textContent)
+        || '';
+      show(img.src, caption);
+      return;
+    }
+    if (e.target === lb || e.target.classList.contains('lightbox-backdrop') || e.target.id === 'lightbox-close'){
+      hide();
+      return;
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !lb.classList.contains('hidden')) hide();
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  // Ensure global API for any inline onclick handlers
+  window.openLightbox = function(src, caption){
+    const lb = document.getElementById('lightbox');
+    if (!lb) return;
+    const imgEl = document.getElementById('lightbox-img');
+    const capEl = document.getElementById('lightbox-caption');
+    imgEl.src = src || '';
+    capEl.textContent = caption || '';
+    lb.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeLightbox = function(){
+    const lb = document.getElementById('lightbox');
+    if (!lb) return;
+    lb.classList.add('hidden');
+    const imgEl = document.getElementById('lightbox-img');
+    if (imgEl) imgEl.src = '';
+    document.body.style.overflow = '';
+  };
+
+  // One-time delegated click: handle clicks on the card OR the image
+  document.addEventListener('click', function(e){
+    // If click was on lightbox backdrop or close
+    if (e.target.id === 'lightbox-close' || e.target.classList.contains('lightbox-backdrop') || e.target.id === 'lightbox') {
+      window.closeLightbox();
+      return;
+    }
+    // Weapon image or inside weapon card
+    let card = e.target.closest('.weapon');
+    if (card) {
+      const img = card.querySelector('img');
+      const name = (card.querySelector('.name-badge')?.textContent || img?.alt || '').trim();
+      if (img && img.src) {
+        window.openLightbox(img.src, name);
+      }
+      return;
+    }
+    // Also allow clicking winners/drug tiles images
+    const img = e.target.closest('.csgo-win-card img, .win-card img, .drug-card img');
+    if (img) {
+      const cap = img.getAttribute('alt') 
+        || (img.closest('.csgo-win-card')?.querySelector('.name')?.textContent || '')
+        || (img.closest('.win-card')?.querySelector('.name')?.textContent || '')
+        || (img.closest('.drug-card')?.querySelector('.drug-meta .name')?.textContent || '');
+      window.openLightbox(img.src, cap);
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') window.closeLightbox();
+  });
+})();
+</script>
+</body>
 </html>
