@@ -702,6 +702,7 @@ function deDupePick(pool, lastName, avoidDupes){
 }
 
     function showTier(tierId) {
+      try { localStorage.setItem('lastTier', tierId); } catch(e){}
       document.querySelectorAll('.tier').forEach(t => t.classList.add('hidden'));
       document.getElementById(tierId).classList.remove('hidden');
       // Hide comparison panels and heading only for drugs tab
@@ -721,6 +722,31 @@ function deDupePick(pool, lastName, avoidDupes){
         compareHeading.style.display = 'block';
       }
     }
+// --- PATCH: Persist last open tab and randomizer selection across refreshes ---
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    // Restore last open tab
+    var savedTier = localStorage.getItem('lastTier');
+    if (savedTier && document.getElementById(savedTier)) {
+      showTier(savedTier);
+    }
+    // Remember Randomize tier dropdown
+    var sel = document.getElementById('randomize-tier-select');
+    if (sel) {
+      var savedSel = localStorage.getItem('randomizeTierSelect');
+      if (savedSel && Array.from(sel.options).some(o => o.value === savedSel)) {
+        sel.value = savedSel;
+      }
+      sel.addEventListener('change', function() {
+        try { localStorage.setItem('randomizeTierSelect', sel.value); } catch(e){}
+      });
+    }
+  } catch (e) {
+    console.warn('persist patch error', e);
+  }
+});
+// --- END PATCH ---
+
     let compareCount = 0;
     function compareWeapon(name, damage, reload, tier) {
       const content = `<strong>${name}</strong><br>Damage: ${damage}<br>Reload Speed: ${reload}<br>Tier: ${tier}`;
